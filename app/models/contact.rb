@@ -2,6 +2,8 @@ class Contact < ApplicationRecord
   belongs_to :kind, optional: true
   has_many :phones
 
+  accepts_nested_attributes_for :phones
+
    def author
     "Lucas Fernandes"
   end
@@ -11,7 +13,10 @@ class Contact < ApplicationRecord
       root: true,
       methods: :author,
       except: [:created_at, :updated_at],
-      include: { kind: { except: [:created_at, :updated_at] } }
+      include: {
+        kind: { except: [:created_at, :updated_at] },
+        phones: { except: [:created_at, :updated_at] }
+      }
     )
   end
 end
