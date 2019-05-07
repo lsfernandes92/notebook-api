@@ -34,5 +34,15 @@ namespace :dev do
       end
     end
     puts "=== Telefone cadastrados com sucesso"
+
+    puts "=== Cadastrando endereço para os contatos..."
+    Contact.all.each do |contact|
+      address = Address.create!(
+        street: Faker::Address.street_address,
+        city: Faker::Address.city,
+        contact: contact
+      )
+    end
+    puts "=== Endereços cadastrados com sucesso"
   end
 end
