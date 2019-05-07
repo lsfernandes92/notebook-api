@@ -17,7 +17,8 @@ class Contact < ApplicationRecord
       except: [:created_at, :updated_at],
       include: {
         kind: { except: [:created_at, :updated_at] },
-        phones: { except: [:created_at, :updated_at] }
+        phones: { except: [:created_at, :updated_at] },
+        address: { except: [:created_at, :updated_at] }
       }
     )
   end
