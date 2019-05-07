@@ -16,6 +16,10 @@ gem 'puma', '~> 3.11'
 # Use ActiveModel has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
 
+
+# Repository for collecting Locale data for Ruby on Rails I18n as well as other interesting
+gem 'rails-i18n', '~> 5.1'
+
 # Use ActiveStorage variant
 # gem 'mini_magick', '~> 4.8'
 
