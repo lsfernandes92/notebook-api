@@ -19,6 +19,8 @@ gem 'puma', '~> 3.11'
 gem 'rails-i18n', '~> 5.1'
 # A library for generating fake data such as names, addresses, and phone numbers.
 gem 'faker', :git => 'https://github.com/stympy/faker.git', :branch => 'master'
+# ActiveModel::Serializer implementation and Rails hooks
+gem 'active_model_serializers', '~> 0.10.0'
 
 # Use ActiveStorage variant
 # gem 'mini_magick', '~> 4.8'
