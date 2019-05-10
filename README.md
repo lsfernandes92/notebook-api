@@ -104,7 +104,7 @@ Já para as **responses** existem:
   - `-v` dados request
   - `-i` dados response
   - `-X POST` o verbo utilizado
-  - `-H "Content-Type: application/json"` como os dados serão enviados
+  - `-H "Content-Type: application/json"` como os dados serão enviados, também chamados de "Media Types/Mime Types"
   - `-d` os dados enviados
 
 ## REST? RESTful?
@@ -144,16 +144,135 @@ A gem [rack-cors](https://github.com/cyu/rack-cors) possibilita que qualquer dom
 
 Site útil: [Resttesttes](https://resttesttest.com/)
 
-
-## AMS(Active Model Serializers JSON)
+## Sobre as responses
 
 Classes do Rails que possibilita o trabalho com JSON
 
 ### Active Support JSON
-### Active Model Serializers JSON
+### Active Model Serializers(AMS)
 
-Dispõe uma maior flexibilidade para trabalhar com retornos JSON. Isso tudo pelos componentes **serializers** e **adapters**.
+Dispõe uma maior flexibilidade para trabalhar com retornos JSON. Isso tudo pelos componentes **serializers** e **adapters**. Talvez o mais importante seja a possibilidade de conseguir tornar por padrão seguir uma especificação, a famigerada [{json:api}](https://jsonapi.org/). Com ela é possível seguir boas práticas caso haja alguma dúvida no momento da implementação da API.
 
-Para fazer com que algum model responda com o AMS basta rodar o comando `rails g serializer <MODEL_NAME>`.
+Por padrão o AMS não vem com essa especificação e para isso basta criar um arquivo em `config/initializers/<AMS OU QUALQUER NOME>.rb` com o seguinte código:
 
-JSON:API Specification: [{json:api}](https://jsonapi.org/)
+`ActiveModelSerializers.config.adapter = :json_api`
+
+Apartir disso o response já será diferente meio que da forma mágica do RoR.
+
+Para fazer com que algum model responda com o AMS basta rodar o comando `rails g serializer <MODEL_NAME>`. Nesse momento esse serializer torna-se responsável por qualquer renderização json do projeto para determinado **<MODEL_NAME>** posteriormente criado pelo comando.
+
+### Algumas boas práticas da especificação
+
+* **Date and Time fields:** diz que todo retorno desse tipo deve vir com o padrão **1994-11-05T08:15:30-05:00 corresponds to November 5, 1994, 8:15:30 am, US Eastern Standard Time.** seguindo a ISO 8601.
+* **Visualização de Campos Associados em Models:** Quando um model só guarda o _id_ de um outro model no qual faz associação(em rails quando determinado model tem um `belongs_to :<MODEL>`), o response dessa associação não vira descrito o que ela representa e sim somente o _id_, por exemplo um retorno já com a especificação implementada onde o tipo de `Contact` só traz o id do `Kind`:
+```
+{
+    "data": [
+        {
+            "id": "1",
+            "type": "contacts",
+            "attributes": {
+                "name": "Anna Sasin",
+                "email": "karren@wiegand.net",
+                "birthdate": "2003-05-18T00:00:00+00:00"
+            },
+            "relationships": {
+                "kind": {
+                    "data": {
+                        "id": "2",
+                        "type": "kinds"
+                    },
+                },
+                ...
+            }
+        }
+    ]
+}
+```
+Para que seja sabido qual é o `Kind` com o `id` 2, a especificação diz que deve se incluir `include: :kind` no render do `ContactsController` no caso. Assim o final do JSON do response incluirá um nó parecido como:
+```
+{
+    "data": {
+        "id": "1",
+        "type": "contacts",
+        "attributes": {
+            "name": "Anna Sasin",
+            "email": "karren@wiegand.net",
+            "birthdate": "2003-05-18T00:00:00+00:00"
+        },
+        "relationships": {
+            "kind": {
+                "data": {
+                    "id": "2",
+                    "type": "kinds"
+                },
+                ...
+            }
+        }
+    },
+    "included": [
+        {
+            "id": "2",
+            "type": "kinds",
+            "attributes": {
+                "description": "Conhecido"
+            }
+        }
+    ]
+}
+```
+* **Informações extras**: Qualquer outro tipo de informação que não faz parte da realidade da sua aplicação vc pode adicionar nas chaves _meta_ adicionando nos Controllers `meta: { author: "Lucas Fernandes" }` ou para todos os responses colocando na classe `Serializer` o seguinte:
+```
+meta do
+  { author: "Lucas Fernandes" }
+end
+```
+* **Links([HATEOAS](https://en.wikipedia.org/wiki/HATEOAS))**: Faz parte de uma das constraints do RESTful, a _Interface Uniforme > Hypermedia_. Para isso basta inserir, por exemplo, no `Serializer` `link(:self) { contact_url(object.id) }`. Não só isso mas pode servir de alternativa no momento de trazer os campos associados visto no item "Visualização de Campos Associados em Models" que fala do uso do `include`. Para isso basta usar também no `Serializer` o seguinte:
+```
+belongs_to :kind, optional: true do
+  link(:related) { kind_url(object.kind.id) }
+end
+```
+Assim o final do JSON do response incluirá um nó parecido como:
+```
+{
+    "data": {
+        "id": "1",
+        "type": "contacts",
+        "attributes": {
+            "name": "Anna Sasin",
+            "email": "karren@wiegand.net",
+            "birthdate": "2003-05-18T00:00:00+00:00"
+        },
+        "relationships": {
+            "kind": {
+                "data": {
+                    "id": "2",
+                    "type": "kinds"
+                },
+                "links": {
+                    "related": "http://localhost:3000/kinds/2"
+                }
+            ...
+```
+* **Media Types ou MIME Types**: É a definição de "Uma string que define qual o formato do dado e como ele vai ser lido pela máquina. Isso permite um computador diferenciar entre JSON e XML, por exemplo". Eles fazem parte dos headers de uma requisição. Alguns exemplos são:
+  * application/json
+  * application/xml
+  * multipart/form-data
+  * text/html
+
+A especificação diz que a responsabilidade do cliente e servidor é que seja requisitado e retornado a Media Type "application/vnd.api+json". Para tal basta adicionar `Mime::Type.register "application/vnd.api+json", :json` em **config/initializers/mime_types.rb**. E colocar algo parecido no nosso `ApplicationController`:
+```
+class ApplicationController < ActionController::API
+  before_action :ensure_json_request
+
+  def ensure_json_request
+    return if request.headers["Accept"] =~ /vnd\.api\+json/
+    render :nothing => true, :status => 406
+  end
+end
+```
+
+Referências:
+* ActiveModelSerializers: [GitHub Gem](https://github.com/rails-api/active_model_serializers)
+* JSON:API Specification: [{json:api}](https://jsonapi.org/)
