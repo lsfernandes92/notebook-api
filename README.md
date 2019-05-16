@@ -276,3 +276,79 @@ end
 Referências:
 * ActiveModelSerializers: [GitHub Gem](https://github.com/rails-api/active_model_serializers)
 * JSON:API Specification: [{json:api}](https://jsonapi.org/)
+
+## Autenticações
+
+Existem dois tipos básicos de autenticações, são elas:
+### Simple Basic (Base64)
+```
+require 'base64'
+
+Base64.encode64('user:pass')
+
+# O strict faz encode sem o '\n' no final
+Base64.strict_encode64('user:pass')
+```
+Para fazer uma requisição no curl `curl <URL> -u <USUARIO>:<SENHA>`
+
+Referência de como usar no Rails: [ActionController::HttpAuthentication::Basic](https://api.rubyonrails.org/classes/ActionController/HttpAuthentication/Basic.html)
+### Digest (MD5)
+```
+require 'digest/md5'
+
+Digest::MD5.hexdigest('user:pass')
+```
+Para fazer uma requisição no curl `curl <URL> -u <USUARIO>:<SENHA> --digest`
+
+_Obs: imporante ressaltar que esse método utiliza duas requests. A primeira virá com status code "não autorizado" e na segunda o curl fará automaticamente e responsável por passar alguns parametros a mais para fazer a requisição com sucesso. Caso essa requisição for feita no Postman esses dados extras terão que ser passado na segunda requisição vendo os headers de resposta da primeira requisição._
+
+Referência de como usar no Rails: [ActionController::HttpAuthentication::Digest](https://api.rubyonrails.org/classes/ActionController/HttpAuthentication/Digest.html)
+
+E também existem os tipos de autenticação Web:
+### Autenticação baseada em Token
+
+Quando um meio da interweb fornece um conjunto de caracteres que terá que ser usado no momento do request como forma de autenticação assim como os métodos acima.
+
+O grande problema desse método é que ele é Stateful que contradiz uma das constraints do RESTful.
+
+Para fazer uma requisição no curl `curl <URL> -H "Authorization: Token <TOKEN>"`
+
+Referência de como usar no Rails: [ActionController::HttpAuthentication::Token](https://api.rubyonrails.org/classes/ActionController/HttpAuthentication/Token.html)
+
+### JWT
+
+[JSON Web Tokens](https://jwt.io/) é aberto e utiliza do o padrão da [RFC 7519](https://tools.ietf.org/html/rfc7519) que reinvidica a segurança entre ambas as partes.
+
+JWT.IO permite que vc decodifique, verifique e gere um JWT.
+
+Ele pretende resolver o problema de ter uma autenticação _Stateless_ que as outras autenticações não cobre. Sendo que o servidor não teria nenhuma infomação do cliente e ainda assim conseguiria autenticar.
+
+Exemplo de Ruby com JWT e codificação HMAC:
+
+```
+hmac_secret = 'my$ecretK3y'
+
+token = JWT.encode payload, hmac_secret, 'HS256'
+
+# eyJhbGciOiJIUzI1NiJ9.eyJkYXRhIjoidGVzdCJ9.pNIWIL34Jo13LViZAJACzK6Yf0qnvT_BuwOxiMCPE-Y
+puts token
+
+decoded_token = JWT.decode token, hmac_secret, true, { algorithm: 'HS256' }
+
+# Array
+# [
+#   {"data"=>"test"}, # payload
+#   {"alg"=>"HS256"} # header
+# ]
+puts decoded_token
+```
+
+Referência: [Uma das Gems JWT](https://github.com/jwt/ruby-jwt)
+
+### Devise Token Auth
+
+Gem de autenticação recomendada pela própria gem do Devise. O interessante dessa alternativa é que ela é stateful, porém ainda assim é bastante utilizada.
+
+O funcionamento dele é de gerar um `access-token` a cada requisição enviada para o servidor, sendo assim ao enviar uma requisição será gerado um novo token para a próxima request.
+
+Para utilizar dessa gem basta adiciona-la no Gemfile e rodar `rails g devise_token_auth:install User auth` e adicionar o `before_action :authenticate_user!` no controller desejado para autenticação e rodar um `rails db:migrate`.
