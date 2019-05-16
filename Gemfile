@@ -21,6 +21,10 @@ gem 'rails-i18n', '~> 5.1'
 gem 'faker', :git => 'https://github.com/stympy/faker.git', :branch => 'master'
 # ActiveModel::Serializer implementation and Rails hooks
 gem 'active_model_serializers', '~> 0.10.0'
+# Token based authentication for Rails JSON APIs. Designed to work with jToker and ng-token-auth.
+gem 'devise_token_auth'
+# Flexible authentication solution for Rails with Warden.
+gem 'devise'
 
 # Use ActiveStorage variant
 # gem 'mini_magick', '~> 4.8'

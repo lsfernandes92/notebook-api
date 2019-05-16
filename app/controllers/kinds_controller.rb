@@ -1,5 +1,6 @@
 class KindsController < ApplicationController
   before_action :set_kind, only: [:show, :update, :destroy]
+  before_action :authenticate_user!
 
   # GET /kinds
   def index
@@ -45,7 +46,7 @@ class KindsController < ApplicationController
         @kind = Contact.find(params[:contact_id]).kind
         return @kind
       end
-      
+
       @kind = Kind.find(params[:id])
     end
 
