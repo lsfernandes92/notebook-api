@@ -2,13 +2,9 @@ class PhonesController < ApplicationController
   before_action :set_contacts
 
   def update
-<<<<<<< HEAD
     phone = Phone.find(phone_params[:id])
 
     if phone.update(phone_params)
-=======
-    if @contact.phones.update(phone_params)
->>>>>>> 737b9870716b8e60803143953c3e2ff651259043
       render json: @contact.phones, status: :created, location: contact_phones_url(@contact.id)
     else
       render json: @contact.errors, status: :unprocessable_entity
