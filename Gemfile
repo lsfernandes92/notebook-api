@@ -25,6 +25,8 @@ gem 'active_model_serializers', '~> 0.10.0'
 gem 'devise_token_auth'
 # Flexible authentication solution for Rails with Warden.
 gem 'devise'
+# A plugin for versioning Rails based RESTful APIs.
+gem 'versionist'
 
 # Use ActiveStorage variant
 # gem 'mini_magick', '~> 4.8'
