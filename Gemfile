@@ -29,8 +29,6 @@ gem 'devise'
 gem 'versionist'
 # A Scope & Engine based, clean, powerful, customizable and sophisticated paginator for Ruby webapps
 gem 'kaminari'
-# Link header pagination for Rails and Grape APIs.
-gem 'api-pagination'
 
 # Use ActiveStorage variant
 # gem 'mini_magick', '~> 4.8'
