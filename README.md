@@ -272,6 +272,7 @@ class ApplicationController < ActionController::API
   end
 end
 ```
+* **Tratamento de erros**: Quando ouver erros a indicação é que retorne um hash chamado _errors_ que pode conter um array de hashes com os seguintes valores [JSON:API#errors-processing](https://jsonapi.org/format/#errors-processing) para maior entendimento por parte do cliente.
 
 Referências:
 * ActiveModelSerializers: [GitHub Gem](https://github.com/rails-api/active_model_serializers)
@@ -352,3 +353,116 @@ Gem de autenticação recomendada pela própria gem do Devise. O interessante de
 O funcionamento dele é de gerar um `access-token` a cada requisição enviada para o servidor, sendo assim ao enviar uma requisição será gerado um novo token para a próxima request.
 
 Para utilizar dessa gem basta adiciona-la no Gemfile e rodar `rails g devise_token_auth:install User auth` e adicionar o `before_action :authenticate_user!` no controller desejado para autenticação e rodar um `rails db:migrate`.
+
+Referência: [Devise token Auth](https://github.com/lynndylanhurley/devise_token_auth)
+
+## Versionamento
+
+Por motivos óbvios de não querer que uma versão não atrapalhe a outra que está em produção existe o versionamento.
+
+Algumas estratégias são:
+* Query parameter: /users/100?v=1 (Gem Versionist)
+* HTTP Header: Accept: application/vnd.example.com; version=1 (Gem Versionist)
+* HTTP Custom Header: X-Version: 2.0 (Gem Versionist)
+* Hostname ou subdomínio: v3.api.example.com
+  * Basta adicionar o subdomínio no arquivo **/etc/hosts/** como por exemplo: `127.0.0.1    v1.meusite.local`
+  * Nas rotas adicionar:
+  ```
+    constraints subdomain: 'v1' do
+      scope module: 'v1' do
+        resources :contacts do
+          ...
+        end
+      end
+    end
+  ```
+* Segmento de URL: /v1/users/100 (mais utilizado)
+Obs: Para todos os métodos a cima é necessário alterar as rotas como a gem Versionist propõe e dividir os controller em **controllers/v1** e **controllers/v2**(utilizar a mesma estratégia para os serializers caso for de segmento de URL). Vale ressaltar também que o contra desses métodos acima é da duplicação de código no **routes.rb**
+
+Referência: [Gem Versionist](https://github.com/bploetz/versionist)
+
+## Paginação
+
+### Paginação via HEADERS
+
+Para tal no intuito de facilitar devemos usar o gem 'api-pagination' e/ou a 'kaminari/will_paginate' adicionando `gem 'api-pagination; gem 'kaminari'` no arquivo **Gemfile** e rodar um bundle.
+
+No model podemos informar quantos registros queremos por pagina fazendo algo como:
+```
+class Contact < ApplicationRecord
+  # Kaminari paginates
+  paginates_per 5
+  ...
+  ...
+  ...
+end
+```
+
+Para o controller:
+```
+module V1
+  class ContactsController < ApplicationController
+
+    # GET /contacts
+    def index
+      @contacts = Contact.all.page(params[:page])
+
+      # Metodo '.paginate' exclusivo da Gem 'api-pagination'
+      paginate json: @contacts
+    end
+    ...
+    ...
+    ...
+  end
+end
+```
+
+O resultado disso será uma chama para _/contacts/_ trazendo apenas os cinco primeiro registros e a response virá com um header como:
+```
+Link: <http://localhost:3000/v1/contacts?page=1>; rel="first",
+  <http://localhost:3000/v1/contacts?page=173>; rel="last",
+  <http://localhost:3000/v1/contacts?page=6>; rel="next",
+  <http://localhost:3000/v1/contacts?page=4>; rel="prev"
+```
+Indicando os URL para a navegação entre a paginação entre os registros.
+
+Referêncas:
+  * [Gem api-pagination](https://github.com/davidcelis/api-pagination)
+  * [Gem kaminari](https://github.com/kaminari/kaminari)
+
+### Paginação via JSON API
+
+Do mesmo modo do que o método acima, para esse caso fazemos uso da gem 'kaminari'. Agora o kaminari só exigirá dois parametros para buscar e conseguir fazer o request já paginado. Os parametro são page[:number] e o page[:size].
+
+Portanto o controller voltará para:
+```
+module V1
+  class ContactsController < ApplicationController
+    before_action :set_contact, only: [:show, :update, :destroy]
+
+    # GET /contacts
+    def index
+      page_number = params[:page].try(:[], :number)
+      per_page =  params[:page].try(:[], :size)
+
+      @contacts = Contact.all.page(page_number).per(per_page)
+
+      render json: @contacts
+    end
+    ...
+    ...
+    ...
+  end
+end
+```
+
+Com resposta disso o response agora voltará com um nó de links para a navegação entre a paginação. Algo no final do JSON parecido como:
+```
+"links": {
+    "self": "http://localhost:3000/v1/contacts?page%5Bnumber%5D=1&page%5Bsize%5D=5",
+    "first": "http://localhost:3000/v1/contacts?page%5Bnumber%5D=1&page%5Bsize%5D=5",
+    "prev": null,
+    "next": "http://localhost:3000/v1/contacts?page%5Bnumber%5D=2&page%5Bsize%5D=5",
+    "last": "http://localhost:3000/v1/contacts?page%5Bnumber%5D=3&page%5Bsize%5D=5"
+}
+```
