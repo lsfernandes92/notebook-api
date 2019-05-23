@@ -466,3 +466,32 @@ Com resposta disso o response agora voltará com um nó de links para a navegaç
     "last": "http://localhost:3000/v1/contacts?page%5Bnumber%5D=3&page%5Bsize%5D=5"
 }
 ```
+## Caching
+
+Quando qualquer valor é difícil e computacionalmente custoso de obter deve ser cacheado. Como por exemplo reduzir ao máximo o response de, por exemplo, de um contato. Já será um ganho bem vindo se na próxima requisição só vir dados complementares para esse contato.
+
+Para isso existe dois tipos basicamente, são eles:
+
+* **Cache-Control**:
+  Esse tipo é baseado em tempo, onde a próxima request fará uso das mesmas informações caso for igual a request anterior. Para esse tipo as mais utilizadas são:
+    * Cache-control: max-age=3600, baseada em segundos e pode ser cacheado por intermediários e não só o browser
+    * Cache-control: no-cache/no-store, o primeiro significa que pode ser cacheada mas não pode ser reusada sem antes consultar o servidor. O segundo diz que a resposta não pode ser cacheada em lugar nenhum.
+    * Cache-control: private/public, max-age=86400, public para qualquer um que pode fazer cache e private para qualquer intermediário
+
+  No Rails esse modo é usado pelo [expires_in](https://apidock.com/rails/ActionController/Base/expires_in) adicionando as especificações no controller.
+* **ETag e/ou Last-modified**:
+  Como o próprio nome diz funciona pelo tramite de uma Tag. Exemplo: Cliente realiza um GET, Server retorna uma ETag. Cliente realiza uma nova requisição(enviando o header ´If-None-Match: "VALOR_DA_TAG_DA_ULTIMA_RESPONSE"´), server compara a tag. Se for igual retorna status code **304 Not Modified** e caso contrário retorna **200 OK -- ETag: "<TAG>"**
+
+  O mesmo funcionamento é dado para o _Last-modified_, porém em vez de um tag é usada a data.
+
+  No rails a mágica acontece atraves do método [fresh_when](https://apidock.com/rails/ActionController/Base/fresh_when) para aplicação web e para API o [stale?](https://apidock.com/rails/ActionController/Base/stale%3F)
+
+## Rack/Middleware
+
+Rack é um pacote no Ruby que provê uma interface para o servidor web se comunicar com a aplicação.
+
+Middleware é um termo que se refere a qualquer componente de software/biblioteca  que auxilia, mas não está diretamente envolvido na execução de algum tarefa.
+
+Já um Rack Middleware é um componente situado entre a aplicação e o servidor e que porecssa requests e reponses.
+
+Referência: https://rack.github.io/
