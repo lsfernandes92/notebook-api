@@ -4,22 +4,24 @@ module V1
 
     before_action :set_contact, only: [:show, :update, :destroy]
 
-    # GET /contacts
+    # GET v1/contacts
     def index
       page_number = params[:page].try(:[], :number)
       per_page =  params[:page].try(:[], :size)
 
       @contacts = Contact.all.page(page_number).per(per_page)
 
-      render json: @contacts
+      if stale?(:etag => @article)
+        render json: @contacts
+      end
     end
 
-    # GET /contacts/1
+    # GET v1/contacts/1
     def show
       render json: @contact, include: [:kind, :phones, :address]
     end
 
-    # POST /contacts
+    # POST v1/contacts
     def create
       @contact = Contact.new(contact_params)
 
@@ -30,16 +32,16 @@ module V1
       end
     end
 
-    # PATCH/PUT /contacts/1
+    # PATCH/PUT v1/contacts/1
     def update
       if @contact.update(contact_params)
         render json: @contact
       else
-        render json: ErrorSerializer.serialize(@contact.errors),, status: :unprocessable_entity
+        render json: ErrorSerializer.serialize(@contact.errors), status: :unprocessable_entity
       end
     end
 
-    # DELETE /contacts/1
+    # DELETE v1/contacts/1
     def destroy
       @contact.destroy
     end

@@ -5,6 +5,7 @@ class ApplicationController < ActionController::API
   def ensure_json_request
     unless request.headers["Accept"] =~ /vnd\.api\+json/
       render :nothing => true, :status => 406
+      return
     end
 
     unless request.headers["Content-Type"] =~ /vnd\.api\+json/
