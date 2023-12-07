@@ -281,7 +281,7 @@ Referências:
 
 ## Autenticações
 
-Existem dois tipos básicos de autenticações, são elas:
+Existem dois tipos básicos de autenticações HTTP, são elas:
 ### Simple Basic (Base64)
 ```
 require 'base64'
@@ -305,6 +305,8 @@ Para fazer uma requisição no curl `curl <URL> -u <USUARIO>:<SENHA> --digest`
 _Obs: imporante ressaltar que esse método utiliza duas requests. A primeira virá com status code "não autorizado" e na segunda o curl fará automaticamente e responsável por passar alguns parametros a mais para fazer a requisição com sucesso. Caso essa requisição for feita no Postman esses dados extras terão que ser passado na segunda requisição vendo os headers de resposta da primeira requisição._
 
 Referência de como usar no Rails: [ActionController::HttpAuthentication::Digest](https://api.rubyonrails.org/classes/ActionController/HttpAuthentication/Digest.html)
+
+_EXTRA: Quando feita uma requisição, caso não souber qual tipo de algorítimo a autenticação está usando, basta olhar o header da response chamado "www-authenticate"._
 
 E também existem os tipos de autenticação Web:
 ### Autenticação baseada em Token
