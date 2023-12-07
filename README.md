@@ -100,12 +100,13 @@ Já para as **responses** existem:
 
 `curl http://localhost:3000/contacts -i`: cabeçalho de uma response
 
-`curl http://localhost:3000/contacts -i -v -X POST -H "Content-Type: application/json" -d "{"name": "lucas", "email": "lucas@email.com.br"}"`
+`curl http://localhost:3000/contacts -i -v -X POST -H "Content-Type: application/json" -d "{"name": "lucas", "email": "lucas@email.com.br"}" -u username:password`
   - `-v` dados request
   - `-i` dados response
   - `-X POST` o verbo utilizado
   - `-H "Content-Type: application/json"` como os dados serão enviados, também chamados de "Media Types/Mime Types"
   - `-d` os dados enviados
+  - `-u` autenticação padrão do protocolo HTTP, podendo ser do tipo Base64 ou MD5
 
 ## REST? RESTful?
 
