@@ -480,6 +480,7 @@ Para isso existe dois tipos basicamente, são eles:
     * Cache-control: max-age=3600, baseada em segundos e pode ser cacheado por intermediários e não só o browser
     * Cache-control: no-cache/no-store, o primeiro significa que pode ser cacheada mas não pode ser reusada sem antes consultar o servidor. O segundo diz que a resposta não pode ser cacheada em lugar nenhum.
     * Cache-control: private/public, max-age=86400, public para qualquer um que pode fazer cache e private para qualquer intermediário
+    * Uma response que retorna o status code `304 - Not modified` significa que a response foi cacheada e que o servidor não detectou mudanças desde a última request
 
   No Rails esse modo é usado pelo [expires_in](https://apidock.com/rails/ActionController/Base/expires_in) adicionando as especificações no controller.
 * **ETag e/ou Last-modified**:
