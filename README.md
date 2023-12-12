@@ -477,6 +477,7 @@ Para isso existe dois tipos basicamente, são eles:
 
 * **Cache-Control**:
   Esse tipo é baseado em tempo, onde a próxima request fará uso das mesmas informações caso for igual a request anterior. Para esse tipo as mais utilizadas são:
+    * Esse é um tipo de cache que somente é usado no browser
     * Cache-control: max-age=3600, baseada em segundos e pode ser cacheado por intermediários e não só o browser
     * Cache-control: no-cache/no-store, o primeiro significa que pode ser cacheada mas não pode ser reusada sem antes consultar o servidor. O segundo diz que a resposta não pode ser cacheada em lugar nenhum.
     * Cache-control: private/public, max-age=86400, public para qualquer um que pode fazer cache e private para qualquer intermediário
