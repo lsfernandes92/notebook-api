@@ -477,17 +477,19 @@ Para isso existe dois tipos basicamente, são eles:
 
 * **Cache-Control**:
   Esse tipo é baseado em tempo, onde a próxima request fará uso das mesmas informações caso for igual a request anterior. Para esse tipo as mais utilizadas são:
-    * Esse é um tipo de cache que somente é usado no browser
+    * Esse é um tipo de cache que é usado somente no browser
     * Cache-control: max-age=3600, baseada em segundos e pode ser cacheado por intermediários e não só o browser
     * Cache-control: no-cache/no-store, o primeiro significa que pode ser cacheada mas não pode ser reusada sem antes consultar o servidor. O segundo diz que a resposta não pode ser cacheada em lugar nenhum.
     * Cache-control: private/public, max-age=86400, public para qualquer um que pode fazer cache e private para qualquer intermediário
     * Uma response que retorna o status code `304 - Not modified` significa que a response foi cacheada e que o servidor não detectou mudanças desde a última request
 
   No Rails esse modo é usado pelo [expires_in](https://apidock.com/rails/ActionController/Base/expires_in) adicionando as especificações no controller.
-* **ETag e/ou Last-modified**:
-  Como o próprio nome diz funciona pelo tramite de uma Tag. Exemplo: Cliente realiza um GET, Server retorna uma ETag. Cliente realiza uma nova requisição(enviando o header ´If-None-Match: "VALOR_DA_TAG_DA_ULTIMA_RESPONSE"´), server compara a tag. Se for igual retorna status code **304 Not Modified** e caso contrário retorna **200 OK -- ETag: "<TAG>"**
 
-  O mesmo funcionamento é dado para o _Last-modified_, porém em vez de um tag é usada a data.
+* **ETag e/ou Last-modified**:
+  Como o próprio nome diz funciona pelo tramite de uma tag. 
+  * Exemplo: O cliente realiza um GET e o servidor retorna uma ETag. Para a próxima requisição o cliente realiza enviando o header `If-None-Match` e passando o valor da ETag da última response. Servidor compara a tag. Se o resultado não tiver mudanças desde a última request, então a resposta é cacheada e é retornado o status code **304 Not Modified**. Caso contrário, a resposta é retornada com o status code **200 OK** juntamente com a nova **ETag: "<NOVA_ETAG>"** no header da resposta.
+
+  O funcionamento do _Last-modified_ tem comportamento igual ao ETag, porém em vez de um tag é usada uma data e o header que o cliente deve mandar na requisição é o header `If-Modified-Since` passando o valor do último Last-Modified que vem no header da resposta.
 
   No rails a mágica acontece atraves do método [fresh_when](https://apidock.com/rails/ActionController/Base/fresh_when) para aplicação web e para API o [stale?](https://apidock.com/rails/ActionController/Base/stale%3F)
 
